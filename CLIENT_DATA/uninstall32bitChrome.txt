@@ -1,0 +1,2 @@
+uninstall 32 bit chrome
+MsiExec.exe /X{3C28BF0D-B382-3773-B023-E746DEED9DA4}

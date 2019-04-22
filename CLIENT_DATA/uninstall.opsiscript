@@ -1,0 +1,86 @@
+; Copyright (c) uib gmbh (www.uib.de)
+; This sourcecode is owned by uib gmbh
+; and published under the Terms of the General Public License.
+; credits: http://www.opsi.org/en/credits/
+
+[Actions]
+requiredWinstVersion >= "4.11.3.3"
+
+DefVar $SetupType$
+DefVar $MsiId$
+DefVar $LogDir$
+DefVar $ExitCode$
+DefVar $ErrorMsg$
+DefVar $ProductId$
+DefVar $InstallDir$
+DefVar $InstallDir2$
+DefVar $LicenseRequired$
+DefVar $LicensePool$
+defvar $WinVer$
+DefVar $WinSysType$
+DefVar $WinTypeExt$
+DefVar $MsiId2$
+DefVar $UpdaterMSID$
+Set $WinVer$ = GetMsVersionInfo
+Set $WinSysType$ = GetSystemType
+
+Set $LogDir$ = "%opsiLogDir%"
+
+; ----------------------------------------------------------------; ----------------------------------------------------------------
+Set $SetupType$ = "msi"
+; ----------------------------------------------------------------; ----------------------------------------------------------------
+
+; ----------------------------------------------------------------; ----------------------------------------------------------------
+; - Please check the following values                             -
+; ----------------------------------------------------------------
+Set $ProductId$       = "ica-chrome"
+; $InstallDir$  is where we will put the master_preferneces file for 64 bit installs
+Set $InstallDir$      = "\Program Files\Google\Chrome\Application"
+; $InstallDir2$  is what we will delete after the uninstall (left by auto updater program??)
+Set $InstallDir2$      = "\Program Files (x86)\Google\Chrome"
+Set $LicenseRequired$ = "false"
+Set $LicensePool$     = "p_" + $ProductId$
+Set $MsiId$           = "{B137E619-6835-346A-BDE9-49088C6A2B6A}"
+; set x86 MSID
+Set $MsiId2$          = "{3C28BF0D-B382-3773-B023-E746DEED9DA4}"
+; set auto updater MSID (32 bit)
+Set $UpdaterMSID$     = '{60EC980A-BDA2-4CB6-A427-B07A5498B4CA}'
+
+; ----------------------------------------------------------------
+
+Set $WinTypeExt$ = "x64"
+if ($WinSysType$ = "x86 System")
+    Set $WinTypeExt$ = "x86"
+    Set $MsiId$  =  $MsiId2$
+    Set $InstallDir$ = "\Program Files\Google\Chrome\Application"    
+endif   
+
+comment "Show product picture"
+ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $ProductId$
+
+Message "Uninstalling " + $ProductId$ + " ..." + $WinTypeExt$
+
+if FileExists("%ScriptPath%\delsub.opsiscript")
+   comment "Start uninstall sub section"
+   Sub "%ScriptPath%\delsub.opsiscript"
+endif
+
+if $LicenseRequired$ = "true"
+   comment "Licensing required, free license used"
+   Sub_free_license
+endif
+
+[Sub_free_license]
+comment "License management is enabled and will be used"
+
+comment "Trying to free license used for the product"
+DefVar $result$
+Set $result$ = FreeLicense($LicensePool$)
+; If there is an assignment of a license pool to the product, it is possible to use
+; Set $result$ = FreeLicense("", $ProductId$)
+;
+; If there is an assignment of a license pool to a windows software id, it is possible to use
+; DefVar $WindowsSoftwareId$
+; $WindowsSoftwareId$ = "..."
+; set $result$ = FreeLicense("", "", $WindowsSoftwareId$)
+
